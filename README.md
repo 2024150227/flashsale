@@ -4,7 +4,7 @@
 ## 🎯 项目名称  
 **「FlashSale」—— 基于 FastAPI 的高并发秒杀系统**
 
-> 项目 GitHub 仓库结构建议：
+> 项目结构：
 ```
 flashsale/
 ├── app/
