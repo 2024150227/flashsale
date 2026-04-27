@@ -1,0 +1,74 @@
+version: '3.8'
+
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: flashsale-mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: flashsale
+      MYSQL_USER: flashsale
+      MYSQL_PASSWORD: flashsale123
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    networks:
+      - flashsale-network
+
+  redis:
+    image: redis:7.0
+    container_name: flashsale-redis
+    ports:
+      - "6379:6379"
+    networks:
+      - flashsale-network
+
+  kafka:
+    image: bitnami/kafka:3.3
+    container_name: flashsale-kafka
+    environment:
+      - KAFKA_BROKER_ID=1
+      - KAFKA_ZOOKEEPER_CONNECT=zookeeper:2181
+      - KAFKA_ADVERTISED_LISTENERS=PLAINTEXT://kafka:9092
+      - KAFKA_LISTENER_SECURITY_PROTOCOL_MAP=PLAINTEXT:PLAINTEXT
+      - KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR=1
+    ports:
+      - "9092:9092"
+    depends_on:
+      - zookeeper
+    networks:
+      - flashsale-network
+
+  zookeeper:
+    image: bitnami/zookeeper:3.8
+    container_name: flashsale-zookeeper
+    environment:
+      - ALLOW_ANONYMOUS_LOGIN=yes
+    ports:
+      - "2181:2181"
+    networks:
+      - flashsale-network
+
+  app:
+    build: .
+    container_name: flashsale-app
+    ports:
+      - "8000:8000"
+    depends_on:
+      - mysql
+      - redis
+      - kafka
+    environment:
+      - DATABASE_URL=mysql+mysqlconnector://flashsale:flashsale123@mysql:3306/flashsale
+      - REDIS_URL=redis://redis:6379/0
+      - KAFKA_BOOTSTRAP_SERVERS=kafka:9092
+    networks:
+      - flashsale-network
+
+volumes:
+  mysql_data:
+
+networks:
+  flashsale-network:
+    driver: bridge
