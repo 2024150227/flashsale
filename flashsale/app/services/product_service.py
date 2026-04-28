@@ -1,51 +1,46 @@
 from typing import List, Optional
+from sqlalchemy.orm import Session
 from app.models.product import Product
-from app.utils.redis_client import redis_client
+from app.schemas.product import ProductCreate
+from app.db.session import SessionLocal
+import datetime
 
 class ProductService:
     def get_products(self) -> List[Product]:
         """获取所有秒杀商品"""
-        # 这里可以从Redis缓存中获取，或者从数据库中查询
-        # 暂时返回模拟数据
-        return [
-            Product(
-                id=1001,
-                name="iPhone 14 Pro",
-                price=7999.0,
-                stock=100,
-                description="最新款iPhone",
-                is_active=1
-            ),
-            Product(
-                id=1002,
-                name="MacBook Pro",
-                price=12999.0,
-                stock=50,
-                description="高性能笔记本电脑",
-                is_active=1
-            )
-        ]
-    
+        """获取所有秒杀商品"""
+        db = SessionLocal()
+        try:
+            products = db.query(Product).filter(Product.is_active == 1).all()
+            return products
+        finally:
+            db.close()
+
     def get_product_by_id(self, product_id: int) -> Optional[Product]:
         """根据ID获取商品详情"""
-        # 优先从Redis缓存中获取
-        # 暂时返回模拟数据
-        if product_id == 1001:
-            return Product(
-                id=1001,
-                name="iPhone 14 Pro",
-                price=7999.0,
-                stock=100,
-                description="最新款iPhone",
-                is_active=1
+        db = SessionLocal()
+        try:
+            return db.query(Product).filter(
+                Product.id == product_id,
+                Product.is_active == 1
+            ).first()
+        finally:
+            db.close()
+
+    def create_product(self, product_data: ProductCreate) -> Product:
+        """创建新商品"""
+        db = SessionLocal()
+        try:
+            db_product = Product(
+                name=product_data.name,
+                price=product_data.price,
+                stock=product_data.stock,
+                description=product_data.description,
+                is_active=product_data.is_active
             )
-        elif product_id == 1002:
-            return Product(
-                id=1002,
-                name="MacBook Pro",
-                price=12999.0,
-                stock=50,
-                description="高性能笔记本电脑",
-                is_active=1
-            )
-        return None
+            db.add(db_product)
+            db.commit()
+            db.refresh(db_product)
+            return db_product
+        finally:
+            db.close()

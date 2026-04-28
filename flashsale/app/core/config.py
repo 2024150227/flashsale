@@ -8,10 +8,10 @@ class Settings(BaseSettings):
     debug: bool = True
     
     # 数据库配置
-    database_url: str
+    database_url: str = "mysql+pymysql://root:123456@mysql:3306/flashsale"
     
-    # Redis配置
-    redis_url: str
+       # Redis配置
+    redis_url: str = "redis://redis:6379/0"
     
     # Kafka配置
     kafka_bootstrap_servers: str

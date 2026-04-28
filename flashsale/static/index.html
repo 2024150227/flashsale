@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FlashSale - 秒杀系统</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container { max-width: 1200px; margin: 0 auto; }
+        header { text-align: center; color: white; margin-bottom: 40px; }
+        header h1 { font-size: 2.5rem; margin-bottom: 10px; }
+        header p { font-size: 1.1rem; opacity: 0.9; }
+        
+        .status-bar {
+            background: rgba(255,255,255,0.2);
+            color: white;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        
+        .products-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 30px;
+            margin-bottom: 40px;
+        }
+        
+        .product-card {
+            background: white;
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            transition: transform 0.3s;
+        }
+        
+        .product-card:hover { transform: translateY(-10px); }
+        
+        .product-image {
+            height: 200px;
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 4rem;
+        }
+        
+        .product-info { padding: 25px; }
+        .product-name { font-size: 1.3rem; font-weight: bold; color: #333; margin-bottom: 10px; }
+        .product-price { color: #e74c3c; font-size: 1.8rem; font-weight: bold; margin-bottom: 15px; }
+        .product-stock { color: #666; font-size: 0.9rem; margin-bottom: 20px; }
+        .product-stock span { color: #27ae60; font-weight: bold; }
+        
+        .btn {
+            width: 100%;
+            padding: 15px;
+            border: none;
+            border-radius: 10px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        .btn-primary:hover { transform: scale(1.02); }
+        .btn-primary:disabled { background: #bdc3c7; cursor: not-allowed; }
+        
+        .order-form {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+        
+        .order-form h2 { color: #333; margin-bottom: 20px; }
+        
+        .form-group { margin-bottom: 20px; }
+        .form-group label { display: block; margin-bottom: 8px; color: #555; }
+        .form-group input {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 1rem;
+        }
+        
+        .form-group input:focus { outline: none; border-color: #667eea; }
+        
+        .toast {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px 25px;
+            border-radius: 10px;
+            color: white;
+            font-weight: 500;
+            z-index: 1000;
+        }
+        
+        .toast.success { background: #27ae60; }
+        .toast.error { background: #e74c3c; }
+        
+        .loading { text-align: center; padding: 40px; color: white; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>⚡ FlashSale 秒杀系统</h1>
+            <p>热门商品，限时抢购，抢完即止！</p>
+        </header>
+        
+        <div class="status-bar" id="statusBar">
+            <span id="statusText">正在连接服务器...</span>
+        </div>
+
+        <div class="products-grid" id="productsGrid">
+            <div class="loading">加载中...</div>
+        </div>
+
+        <div class="order-form">
+            <h2>📦 参与秒杀</h2>
+            <form id="orderForm">
+                <div class="form-group">
+                    <label for="userId">用户ID</label>
+                    <input type="number" id="userId" placeholder="请输入用户ID" required>
+                </div>
+                <div class="form-group">
+                    <label for="productId">商品ID</label>
+                    <input type="number" id="productId" placeholder="请输入商品ID" required>
+                </div>
+                <button type="submit" class="btn btn-primary">立即秒杀</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = '/api/v1';
+
+        async function checkServerStatus() {
+            const statusBar = document.getElementById('statusBar');
+            const statusText = document.getElementById('statusText');
+            
+            try {
+                const response = await fetch(`${API_BASE}/products/`);
+                if (response.ok) {
+                    statusBar.style.background = 'rgba(39, 174, 96, 0.3)';
+                    statusText.textContent = '✅ 服务器连接正常';
+                } else {
+                    statusBar.style.background = 'rgba(231, 76, 60, 0.3)';
+                    statusText.textContent = '❌ 服务器响应异常';
+                }
+            } catch (error) {
+                statusBar.style.background = 'rgba(231, 76, 60, 0.3)';
+                statusText.textContent = '❌ 无法连接服务器';
+            }
+        }
+
+        async function loadProducts() {
+            const grid = document.getElementById('productsGrid');
+            grid.innerHTML = '<div class="loading">加载中...</div>';
+
+            try {
+                const response = await fetch(`${API_BASE}/products/`);
+                if (!response.ok) throw new Error('HTTP error');
+                
+                const products = await response.json();
+
+                if (products.length === 0) {
+                    grid.innerHTML = '<div class="loading">暂无秒杀商品</div>';
+                    return;
+                }
+
+                grid.innerHTML = products.map(product => `
+                    <div class="product-card">
+                        <div class="product-image">🏷️</div>
+                        <div class="product-info">
+                            <div class="product-name">${product.name}</div>
+                            <div class="product-price">${product.price.toFixed(2)}</div>
+                            <div class="product-stock">库存: <span>${product.stock}</span> 件</div>
+                            <button class="btn btn-primary" onclick="quickOrder(${product.id})">立即抢购</button>
+                        </div>
+                    </div>
+                `).join('');
+            } catch (error) {
+                grid.innerHTML = '<div class="loading">加载失败，请检查服务</div>';
+            }
+        }
+
+        async function createOrder(userId, productId) {
+            try {
+                const response = await fetch(`${API_BASE}/orders/`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ user_id: userId, product_id: productId })
+                });
+
+                const data = await response.json();
+                if (response.ok) {
+                    showToast('秒杀成功！', 'success');
+                    loadProducts();
+                } else {
+                    showToast('秒杀失败: ' + (data.detail || '未知错误'), 'error');
+                }
+            } catch (error) {
+                showToast('秒杀失败', 'error');
+            }
+        }
+
+        function quickOrder(productId) {
+            const userId = prompt('请输入用户ID:');
+            if (userId) createOrder(parseInt(userId), productId);
+        }
+
+        document.getElementById('orderForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            createOrder(document.getElementById('userId').value, document.getElementById('productId').value);
+        });
+
+        function showToast(message, type) {
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            toast.textContent = message;
+            document.body.appendChild(toast);
+            setTimeout(() => toast.remove(), 3000);
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            checkServerStatus();
+            loadProducts();
+        });
+    </script>
+</body>
+</html>

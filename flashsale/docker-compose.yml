@@ -1,23 +1,25 @@
-version: '3.8'
-
+#进行docker-compose配置,格式为version:3.8或更高版本,
+# services: 每个服务都有一个容器,容器之间通过网络通信,版本只能为3.8或更高版本，
+#为什么从3.8开始支持services:格式
 services:
   mysql:
     image: mysql:8.0
     container_name: flashsale-mysql
     environment:
-      MYSQL_ROOT_PASSWORD: root
+      MYSQL_ROOT_PASSWORD: mysql123456
       MYSQL_DATABASE: flashsale
-      MYSQL_USER: flashsale
-      MYSQL_PASSWORD: flashsale123
     ports:
-      - "3306:3306"
+      - "3307:3306"
     volumes:
+      # mysql_data: 数据库数据卷,用于持久化数据库数据
+      # /var/lib/mysql: 数据库数据目录,用于存储数据库数据,
+      # 我的数据库数据目录为/var/lib/mysql，用于存储数据库数据,数据库数据会在容器重启时持久化，但是我的现在的项目目录没有/var/lib/mysql目录,所以这里需要挂载一个空目录,用于存储数据库数据
       - mysql_data:/var/lib/mysql
     networks:
       - flashsale-network
 
   redis:
-    image: redis:7.0
+    image: docker.mirrors.ustc.edu.cn/library/redis:7.0
     container_name: flashsale-redis
     ports:
       - "6379:6379"
@@ -39,7 +41,7 @@ services:
       - zookeeper
     networks:
       - flashsale-network
-
+  # zookeeper: 用于协调分布式系统,提供服务发现和配置管理
   zookeeper:
     image: bitnami/zookeeper:3.8
     container_name: flashsale-zookeeper

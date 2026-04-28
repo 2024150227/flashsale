@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException
 from typing import List
 
-from app.schemas.product import Product
+from app.schemas.product import Product, ProductCreate
 from app.services.product_service import ProductService
 
 router = APIRouter()
@@ -19,3 +19,8 @@ async def get_product(product_id: int):
     if not product:
         raise HTTPException(status_code=404, detail="商品不存在")
     return product
+
+@router.post("/", response_model=Product)
+async def create_product(product: ProductCreate):
+    """创建秒杀商品"""
+    return product_service.create_product(product)
