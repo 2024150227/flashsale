@@ -11,44 +11,44 @@ services:
     ports:
       - "3307:3306"
     volumes:
-      # mysql_data: 数据库数据卷,用于持久化数据库数据
-      # /var/lib/mysql: 数据库数据目录,用于存储数据库数据,
-      # 我的数据库数据目录为/var/lib/mysql，用于存储数据库数据,数据库数据会在容器重启时持久化，但是我的现在的项目目录没有/var/lib/mysql目录,所以这里需要挂载一个空目录,用于存储数据库数据
       - mysql_data:/var/lib/mysql
     networks:
       - flashsale-network
 
   redis:
-    image: docker.mirrors.ustc.edu.cn/library/redis:7.0
+    image: redis:7.0
     container_name: flashsale-redis
     ports:
       - "6379:6379"
+    volumes:
+      - redis_data:/data
     networks:
       - flashsale-network
 
   kafka:
-    image: bitnami/kafka:3.3
+    image: confluentinc/cp-kafka:7.6.0
     container_name: flashsale-kafka
     environment:
-      - KAFKA_BROKER_ID=1
-      - KAFKA_ZOOKEEPER_CONNECT=zookeeper:2181
+      # KRaft模式配置
+      - KAFKA_NODE_ID=1
+      - KAFKA_PROCESS_ROLES=controller,broker
+      - KAFKA_LISTENERS=PLAINTEXT://:9092,CONTROLLER://:9093
       - KAFKA_ADVERTISED_LISTENERS=PLAINTEXT://kafka:9092
-      - KAFKA_LISTENER_SECURITY_PROTOCOL_MAP=PLAINTEXT:PLAINTEXT
+      - KAFKA_CONTROLLER_QUORUM_VOTERS=1@kafka:9093
+      - KAFKA_INTER_BROKER_LISTENER_NAME=PLAINTEXT
+      - KAFKA_CONTROLLER_LISTENER_NAMES=CONTROLLER
+      - KAFKA_LISTENER_SECURITY_PROTOCOL_MAP=PLAINTEXT:PLAINTEXT,CONTROLLER:PLAINTEXT
       - KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR=1
+      - KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR=1
+      - KAFKA_TRANSACTION_STATE_LOG_MIN_ISR=1
+      - KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS=0
+      # KRaft集群ID（使用UUID生成）
+      - CLUSTER_ID=MkU3OEVBNTcwNTJENDM2Qk
     ports:
       - "9092:9092"
-    depends_on:
-      - zookeeper
-    networks:
-      - flashsale-network
-  # zookeeper: 用于协调分布式系统,提供服务发现和配置管理
-  zookeeper:
-    image: bitnami/zookeeper:3.8
-    container_name: flashsale-zookeeper
-    environment:
-      - ALLOW_ANONYMOUS_LOGIN=yes
-    ports:
-      - "2181:2181"
+    volumes:
+    # 配置Kafka日志目录
+      - kafka_data:/tmp/kafka-logs
     networks:
       - flashsale-network
 
@@ -70,6 +70,8 @@ services:
 
 volumes:
   mysql_data:
+  kafka_data:
+  redis_data:
 
 networks:
   flashsale-network:

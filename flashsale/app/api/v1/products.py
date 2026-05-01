@@ -3,6 +3,7 @@ from typing import List
 
 from app.schemas.product import Product, ProductCreate
 from app.services.product_service import ProductService
+from app.core.logger import products_api_logger as logger
 
 router = APIRouter()
 product_service = ProductService()

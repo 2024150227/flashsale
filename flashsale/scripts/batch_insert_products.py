@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
-"""Batch insert 200 test products"""
-
+"""Batch insert 200 test products to the database"""
+#脚本批量插入200个测试商品到数据库
 import datetime
 import sys
 import os
@@ -11,6 +11,8 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 from app.db.session import SessionLocal
 from app.models.product import Product
 
+# 生成200个测试商品并插入数据库
+# 连接数据库引擎engine
 def generate_products():
     print("Starting to insert 200 products...")
 
