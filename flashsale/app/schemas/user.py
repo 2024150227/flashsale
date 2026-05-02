@@ -46,7 +46,19 @@ class User(UserBase):
     is_active: int = Field(default=1, description="用户状态，1表示活跃，0表示禁用")
     created_at: Optional[datetime.datetime] = Field(None, description="创建时间")
     updated_at: Optional[datetime.datetime] = Field(None, description="更新时间")
-
+    # 用户喜欢的商品ID列表，JSON格式存储，默认为空列表
+    love: Optional[List[int]] = Field(default=[], description="用户喜欢的商品ID列表")
+    # 用户订单ID列表，JSON格式存储，默认为空列表
+    orders: Optional[List[int]] = Field(default=[], description="用户订单ID列表")
+    # 用户购物车商品列表，JSON格式存储，默认为空列表
+    cart: Optional[List[dict]] = Field(default=[], description="用户购物车商品列表")
+    # 用户地址信息，JSON格式存储，默认为空字典
+    address: Optional[dict] = Field(default={}, description="用户地址信息")
+    # 用户手机号，可选
+    phone: Optional[str] = Field(None, description="用户手机号")
+    # 用户邮箱，可选
+    email: Optional[str] = Field(None, description="用户邮箱")
+    #Config配置，将数据库字段映射到模型字段
     class Config:
         from_attributes = True
 

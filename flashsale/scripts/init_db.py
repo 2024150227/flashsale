@@ -11,13 +11,17 @@ from app.models.product import Product
 from app.models.order import Order
 # 初始化数据库,创建表并添加测试商品,如果数据库为空,则添加测试商品
 # 连接数据库引擎engine
+import logging
+
+logging.basicConfig(level=logging.INFO)
+
 def init_database():
-    print("Initializing database...")
+    logging.info("Initializing database...")
     
     try:
         # 创建数据库表,如果表不存在则创建
         Base.metadata.create_all(bind=engine)
-        print("Tables created successfully!")
+        logging.info("Tables created successfully!")
         
         from sqlalchemy.orm import Session
         from app.db.session import SessionLocal
@@ -36,13 +40,13 @@ def init_database():
             )
             db.add(test_product)
             db.commit()
-            print("Test product added!")
+            logging.info("Test product added!")
         
         db.close()
-        print("Database initialization completed!")
+        logging.info("Database initialization completed!")
         
     except Exception as e:
-        print("Database initialization failed:", str(e))
+        logging.error("Database initialization failed:", str(e))
         sys.exit(1)
 
 if __name__ == "__main__":

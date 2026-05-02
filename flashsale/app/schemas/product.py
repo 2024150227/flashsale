@@ -22,6 +22,7 @@ class Product(ProductBase):
     created_at: Optional[datetime.datetime] = None
     # 商品更新时间（可选，兼容旧数据）
     updated_at: Optional[datetime.datetime] = None
-    
+    # 商品是否激活（默认激活）
+    is_active: int = 1
     class Config:
         from_attributes = True

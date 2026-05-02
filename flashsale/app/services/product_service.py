@@ -6,6 +6,7 @@ from app.db.session import SessionLocal
 import datetime
 from app.core.logger import product_service_logger as logger
 from app.core.xss import escape_html
+from app.utils.redis_client import redis_client
 #业务逻辑层，负责处理商品相关的业务逻辑
 class ProductService:
     def get_products(self) -> List[Product]:
@@ -14,6 +15,13 @@ class ProductService:
         try:
             # 从数据库查询所有秒杀商品,is_active为1表示商品有效
             products = db.query(Product).filter(Product.is_active == 1).all()
+            
+            # 从 Redis 读取最新库存覆盖
+            for product in products:
+                redis_stock = redis_client.get(f"flashsale:stock:{product.id}")
+                if redis_stock is not None:
+                    product.stock = int(redis_stock)
+            
             return products
         finally:
             db.close()
@@ -30,10 +38,18 @@ class ProductService:
         """
         db = SessionLocal()
         try:
-            return db.query(Product).filter(
+            product = db.query(Product).filter(
                 Product.id == product_id,
                 Product.is_active == 1
             ).first()
+            
+            # 从 Redis 读取最新库存覆盖
+            if product:
+                redis_stock = redis_client.get(f"flashsale:stock:{product_id}")
+                if redis_stock is not None:
+                    product.stock = int(redis_stock)
+            
+            return product
         finally:
             db.close()
 

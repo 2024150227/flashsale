@@ -21,7 +21,6 @@ def get_producer():
             'socket.timeout.ms': 5000,
             'api.version.request.timeout.ms': 5000,
             'metadata.max.age.ms': 300000,
-            'queue.buffering.max.size': 1000000,
             'message.send.max.retries': 1,
             'retry.backoff.ms': 1000,
         }
@@ -29,7 +28,7 @@ def get_producer():
         logging.info("[INFO] Kafka producer initialized successfully")
     except Exception as e:
         _producer = None
-        logging.warning(f"[WARNING] Kafka producer initialization failed: {str(e)}")
+        logging.warning(f"[WARNING] Kafka producer initialization failed: {str(e)}")    
         return None
     return _producer
 
@@ -39,21 +38,24 @@ def delivery_report(err, msg):
         logging.error(f"[ERROR] Message delivery failed: {err}")
     else:
         logging.debug(f"[DEBUG] Message delivered to {msg.topic()} [{msg.partition()}]")
-
+#发送订单数据到消费者
 def send_order_message(message: dict):
     """发送订单消息到Kafka（异步模式）"""
     producer = get_producer()
     
     if not producer:
+        # Kafka生产者未初始化，直接丢弃消息
         logging.warning(f"[WARNING] Kafka not available, message dropped: {message}")
         return False
     
     try:
+        # 发送消息到Kafka主题,并设置回调函数delivery_report
         producer.produce(
             settings.kafka_topic, 
             value=json.dumps(message),
             callback=delivery_report
         )
+        # 确保消息发送完成，poll()方法会阻塞直到消息发送完成
         producer.poll(0)
         logging.info(f"Order message queued: {message}")
         return True

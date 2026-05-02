@@ -1,6 +1,6 @@
 import subprocess
 import os
-
+#脚本管理MySQL数据库，包括创建、查看、描述表结构、执行SQL语句等
 def run_command(cmd):
     """执行命令并返回输出"""
     print(f"\n📝 执行命令: {cmd}")
@@ -20,30 +20,35 @@ def enter_container(container_name="flashsale-mysql"):
     # 交互式命令需要特殊处理
     subprocess.run(cmd, shell=True)
 
+#权重：1（低频率，但最重要）
 def create_database(db_name, container_name="flashsale-mysql"):
     """创建新数据库"""
     print(f"\n🗄️ 创建数据库: {db_name}")
     cmd = f'''docker exec {container_name} mysql -u root --password=mysql123456 -e "CREATE DATABASE IF NOT EXISTS {db_name};"'''
     return run_command(cmd)
 
+#权重：1（低频率，但最重要）
 def show_databases(container_name="flashsale-mysql"):
     """查看所有数据库"""
     print("\n📊 查看所有数据库")
     cmd = f'''docker exec {container_name} mysql -u root --password=mysql123456 -e "SHOW DATABASES;"'''
     return run_command(cmd)
 
+#权重：1（低频率，但最重要）
 def show_tables(db_name, container_name="flashsale-mysql"):
     """查看数据库中的表"""
     print(f"\n📋 查看数据库 {db_name} 中的表")
     cmd = f'''docker exec {container_name} mysql -u root --password=mysql123456 -D {db_name} -e "SHOW TABLES;"'''
     return run_command(cmd)
 
+#权重：1（低频率，但最重要）
 def describe_table(db_name, table_name, container_name="flashsale-mysql"):
     """查看表结构"""
     print(f"\n🔍 查看表 {db_name}.{table_name} 的结构")
     cmd = f'''docker exec {container_name} mysql -u root --password=mysql123456 -D {db_name} -e "DESCRIBE {table_name};"'''
     return run_command(cmd)
 
+#权重：1（低频率，但最重要）
 def execute_sql(sql, container_name="flashsale-mysql"):
     """执行任意 SQL 语句"""
     print(f"\n⚙️ 执行 SQL: {sql[:50]}...")

@@ -32,12 +32,12 @@ services:
       # KRaft模式配置
       - KAFKA_NODE_ID=1
       - KAFKA_PROCESS_ROLES=controller,broker
-      - KAFKA_LISTENERS=PLAINTEXT://:9092,CONTROLLER://:9093
-      - KAFKA_ADVERTISED_LISTENERS=PLAINTEXT://kafka:9092
-      - KAFKA_CONTROLLER_QUORUM_VOTERS=1@kafka:9093
+      - KAFKA_LISTENERS=PLAINTEXT://0.0.0.0:9092,EXTERNAL://0.0.0.0:9094,CONTROLLER://:9093
+      - KAFKA_ADVERTISED_LISTENERS=PLAINTEXT://kafka:9092,EXTERNAL://localhost:9094
+      - KAFKA_CONTROLLER_QUORUM_VOTERS=1@localhost:9093
       - KAFKA_INTER_BROKER_LISTENER_NAME=PLAINTEXT
       - KAFKA_CONTROLLER_LISTENER_NAMES=CONTROLLER
-      - KAFKA_LISTENER_SECURITY_PROTOCOL_MAP=PLAINTEXT:PLAINTEXT,CONTROLLER:PLAINTEXT
+      - KAFKA_LISTENER_SECURITY_PROTOCOL_MAP=PLAINTEXT:PLAINTEXT,EXTERNAL:PLAINTEXT,CONTROLLER:PLAINTEXT
       - KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR=1
       - KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR=1
       - KAFKA_TRANSACTION_STATE_LOG_MIN_ISR=1
@@ -46,8 +46,9 @@ services:
       - CLUSTER_ID=MkU3OEVBNTcwNTJENDM2Qk
     ports:
       - "9092:9092"
+      - "9094:9094"
     volumes:
-    # 配置Kafka日志目录
+      # 配置Kafka日志目录
       - kafka_data:/tmp/kafka-logs
     networks:
       - flashsale-network
@@ -69,10 +70,20 @@ services:
       - flashsale-network
 
 volumes:
+  # MySQL数据库数据持久化卷
   mysql_data:
+    driver: local
+
+  # Kafka消息日志数据持久化卷
   kafka_data:
+    driver: local
+
+  # Redis缓存数据持久化卷
   redis_data:
+    driver: local
 
 networks:
   flashsale-network:
+    # 定义自定义网络,用于连接所有服务
+    # 每个服务的容器都可以通过网络名称进行通信
     driver: bridge

@@ -466,6 +466,169 @@
             }
         }
 
+        /* User Bar Buttons */
+        .user-buttons {
+            display: flex;
+            gap: 10px;
+        }
+
+        .orders-btn {
+            background: rgba(46, 204, 113, 0.2);
+            border: 1px solid rgba(46, 204, 113, 0.4);
+            color: #2ecc71;
+            padding: 10px 20px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 0.95rem;
+            transition: all 0.3s;
+        }
+
+        .orders-btn:hover {
+            background: rgba(46, 204, 113, 0.3);
+            transform: scale(1.03);
+        }
+
+        .orders-btn:active {
+            transform: scale(0.98);
+        }
+
+        /* Order Section */
+        .orders-section {
+            display: none;
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 25px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .orders-section.active {
+            display: block;
+        }
+
+        .orders-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .orders-header h2 {
+            color: white;
+            font-size: 1.5rem;
+        }
+
+        .close-btn {
+            background: rgba(255, 255, 255, 0.1);
+            border: none;
+            color: white;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 1.2rem;
+            transition: all 0.3s;
+        }
+
+        .close-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .orders-empty {
+            text-align: center;
+            padding: 40px;
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 1.1rem;
+        }
+
+        .orders-grid {
+            display: grid;
+            gap: 15px;
+        }
+
+        .order-card {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .order-left {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .order-id {
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 0.85rem;
+        }
+
+        .order-product {
+            color: white;
+            font-size: 1.1rem;
+            font-weight: 600;
+        }
+
+        .order-info {
+            display: flex;
+            gap: 15px;
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 0.9rem;
+        }
+
+        .order-right {
+            text-align: right;
+        }
+
+        .order-price {
+            color: #f5576c;
+            font-size: 1.4rem;
+            font-weight: bold;
+        }
+
+        .order-status {
+            color: #2ecc71;
+            font-size: 0.9rem;
+            margin-top: 5px;
+        }
+
+        .order-time {
+            color: rgba(255, 255, 255, 0.5);
+            font-size: 0.8rem;
+            margin-top: 5px;
+        }
+
+        .order-countdown {
+            color: #f39c12;
+            font-size: 0.85rem;
+            margin-top: 8px;
+            padding: 5px 10px;
+            background: rgba(243, 156, 18, 0.1);
+            border-radius: 8px;
+            display: inline-block;
+        }
+
+        .cancel-btn {
+            background: rgba(231, 76, 60, 0.2);
+            border: 1px solid rgba(231, 76, 60, 0.4);
+            color: #e74c3c;
+            padding: 8px 15px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            margin-top: 8px;
+            transition: all 0.3s;
+        }
+
+        .cancel-btn:hover {
+            background: rgba(231, 76, 60, 0.4);
+        }
+
         /* Product Icons */
         .product-icon-1 {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -524,7 +687,20 @@
                     <div class="user-id">ID: <span id="userIdDisplay">0</span></div>
                 </div>
             </div>
-            <button class="logout-btn" id="logoutBtn" onclick="handleLogout()">退出登录</button>
+            <div class="user-buttons">
+                <button class="orders-btn" id="ordersBtn" onclick="toggleOrders()">📋 我的订单</button>
+                <button class="logout-btn" id="logoutBtn" onclick="handleLogout()">退出登录</button>
+            </div>
+        </div>
+
+        <div class="orders-section" id="ordersSection">
+            <div class="orders-header">
+                <h2>📋 我的订单</h2>
+                <button class="close-btn" onclick="toggleOrders()">×</button>
+            </div>
+            <div class="orders-grid" id="ordersGrid">
+                <div class="loading">加载订单中</div>
+            </div>
         </div>
 
         <div class="status-bar" id="statusBar">
@@ -677,9 +853,14 @@
 
         async function createOrder(userId, productId) {
             try {
+                const token = localStorage.getItem('access_token');
+                const headers = { 'Content-Type': 'application/json' };
+                if (token) {
+                    headers['Authorization'] = `Bearer ${token}`;
+                }
                 const response = await fetch(`${API_BASE}/orders/`, {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: headers,
                     body: JSON.stringify({ user_id: userId, product_id: productId })
                 });
 
@@ -687,6 +868,11 @@
                 if (response.ok) {
                     showToast('🎉 秒杀成功！订单已进入处理队列', 'success');
                     loadProducts();
+                    // 订单创建后，刷新订单列表（如果订单列表已打开）
+                    const ordersSection = document.getElementById('ordersSection');
+                    if (ordersSection.classList.contains('active')) {
+                        loadOrders();
+                    }
                 } else {
                     showToast('❌ 秒杀失败: ' + (data.detail || '未知错误'), 'error');
                 }
@@ -695,11 +881,197 @@
             }
         }
 
-        function quickOrder(productId) {
-            const userId = prompt('请输入用户ID:', '1');
-            if (userId && !isNaN(userId)) {
-                createOrder(parseInt(userId), productId);
+        // 订单列表切换
+        function toggleOrders() {
+            const ordersSection = document.getElementById('ordersSection');
+            if (ordersSection.classList.contains('active')) {
+                ordersSection.classList.remove('active');
+            } else {
+                ordersSection.classList.add('active');
+                loadOrders();
             }
+        }
+
+        // 加载订单列表
+        async function loadOrders() {
+            const grid = document.getElementById('ordersGrid');
+            grid.innerHTML = '<div class="loading">加载订单中</div>';
+
+            try {
+                const token = localStorage.getItem('access_token');
+                if (!token) {
+                    grid.innerHTML = '<div class="orders-empty">请先登录</div>';
+                    return;
+                }
+
+                const response = await fetch(`${API_BASE}/orders/`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                if (!response.ok) {
+                    if (response.status === 401) {
+                        grid.innerHTML = '<div class="orders-empty">登录已过期，请重新登录</div>';
+                        return;
+                    }
+                    throw new Error('HTTP error');
+                }
+
+                const data = await response.json();
+
+                if (!data.orders || data.orders.length === 0) {
+                    grid.innerHTML = '<div class="orders-empty">📭 暂无订单</div>';
+                    return;
+                }
+
+                grid.innerHTML = data.orders.map(order => {
+                    const productName = `商品 #${order.product_id}`;
+                    const date = new Date(order.created_at);
+                    const formattedDate = date.toLocaleString('zh-CN');
+
+                    const createdTime = new Date(order.created_at).getTime();
+                    const now = Date.now();
+                    const elapsed = now - createdTime;
+                    const remaining = 24 * 60 * 60 * 1000 - elapsed;
+                    const canCancel = remaining > 0 && order.status === 'completed';
+
+                    let countdownHtml = '';
+                    if (canCancel) {
+                        const hours = Math.floor(remaining / (1000 * 60 * 60));
+                        const minutes = Math.floor((remaining % (1000 * 60 * 60)) / (1000 * 60));
+                        const seconds = Math.floor((remaining % (1000 * 60)) / 1000);
+                        countdownHtml = `<div class="order-countdown" data-remaining="${remaining}" data-order-id="${order.id}">
+                            <span class="countdown-text">剩余 ${hours}时${minutes}分${seconds}秒 可取消</span>
+                        </div>`;
+                    }
+
+                    let statusHtml = '';
+                    if (order.status === 'completed') {
+                        statusHtml = canCancel ? '✅ 待发货' : '✅ 已完成';
+                    } else if (order.status === 'cancelled') {
+                        statusHtml = '❌ 已取消';
+                    } else if (order.status === 'refunded') {
+                        statusHtml = '💰 已退款';
+                    } else {
+                        statusHtml = order.status;
+                    }
+
+                    return `
+                        <div class="order-card" data-order-id="${order.id}">
+                            <div class="order-left">
+                                <div class="order-id">订单 #${order.id}</div>
+                                <div class="order-product">${productName}</div>
+                                <div class="order-info">
+                                    <span>用户 ID: ${order.user_id}</span>
+                                </div>
+                                ${countdownHtml}
+                            </div>
+                            <div class="order-right">
+                                <div class="order-price">¥${order.price.toFixed(2)}</div>
+                                <div class="order-status">${statusHtml}</div>
+                                <div class="order-time">${formattedDate}</div>
+                                ${canCancel ? `<button class="cancel-btn" onclick="cancelOrder(${order.id})">取消订单</button>` : ''}
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+
+                if (typeof startOrderCountdown === 'function') {
+                    startOrderCountdown();
+                }
+            } catch (error) {
+                grid.innerHTML = '<div class="orders-empty">加载失败，请重试</div>';
+                console.error('Load orders error:', error);
+            }
+        }
+
+        async function cancelOrder(orderId) {
+            if (!confirm('确定要取消该订单吗？库存将退还。')) {
+                return;
+            }
+
+            try {
+                const token = localStorage.getItem('access_token');
+                if (!token) {
+                    showToast('请先登录', 'error');
+                    return;
+                }
+
+                const response = await fetch(`${API_BASE}/orders/${orderId}/cancel`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                const data = await response.json();
+                if (response.ok) {
+                    showToast('订单已取消', 'success');
+                    loadOrders();
+                } else {
+                    showToast('取消失败: ' + (data.detail || '未知错误'), 'error');
+                }
+            } catch (error) {
+                showToast('取消失败，请重试', 'error');
+            }
+        }
+
+        function startOrderCountdown() {
+            const countdowns = document.querySelectorAll('.order-countdown');
+            countdowns.forEach(el => {
+                let remaining = parseInt(el.dataset.remaining);
+                const orderId = el.dataset.orderId;
+
+                const updateCountdown = () => {
+                    remaining -= 1000;
+                    const orderEl = document.querySelector(`.order-card[data-order-id="${orderId}"]`);
+                    if (!orderEl) return;
+
+                    const countdownEl = orderEl.querySelector('.order-countdown');
+                    if (!countdownEl) return;
+
+                    if (remaining <= 0) {
+                        countdownEl.querySelector('.countdown-text').textContent = '已过可取消时间';
+                        countdownEl.style.background = 'rgba(150, 150, 150, 0.1)';
+                        const cancelBtn = orderEl.querySelector('.cancel-btn');
+                        if (cancelBtn) cancelBtn.remove();
+                        const statusEl = orderEl.querySelector('.order-status');
+                        if (statusEl) statusEl.textContent = '✅ 已完成';
+                        return;
+                    }
+
+                    const h = Math.floor(remaining / (1000 * 60 * 60));
+                    const m = Math.floor((remaining % (1000 * 60 * 60)) / (1000 * 60));
+                    const s = Math.floor((remaining % (1000 * 60)) / 1000);
+                    countdownEl.querySelector('.countdown-text').textContent = `剩余 ${h}时${m}分${s}秒 可取消`;
+                };
+
+                updateCountdown();
+                setInterval(updateCountdown, 1000);
+            });
+        }
+
+        function quickOrder(productId) {
+            const userInfo = localStorage.getItem('user_info');
+            let userId;
+
+            if (userInfo) {
+                try {
+                    const user = JSON.parse(userInfo);
+                    userId = user.id;
+                } catch (e) {
+                    showToast('请先登录', 'error');
+                    return;
+                }
+            }
+
+            if (!userId) {
+                showToast('请先登录', 'error');
+                return;
+            }
+
+            createOrder(userId, productId);
         }
 
         document.getElementById('orderForm').addEventListener('submit', function (e) {

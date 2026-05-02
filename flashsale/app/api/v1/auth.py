@@ -10,7 +10,7 @@ from app.core.security import (
     verify_password,
     JWTBearer
 )
-from app.services.user_service import get_user_by_username, create_user, add_favorite_product, get_favorite_products
+from app.services.user_service import get_user_by_username, create_user, add_favorite_product, get_favorite_products, get_user
 from app.schemas.user import User, UserCreate, UserRegister, LoginRequest, LoginResponse
 
 router = APIRouter(prefix="/auth", tags=["Authentication"])
@@ -194,5 +194,3 @@ async def get_favorites(
     """
     favorites = get_favorite_products(db, user_id)
     return {"favorites": favorites}
-
-from app.services.user_service import get_user
