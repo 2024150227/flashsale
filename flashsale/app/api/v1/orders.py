@@ -94,6 +94,7 @@ async def get_order(
     """
     db = SessionLocal()
     try:
+        # 检查订单是否存在且属于用户
         order = db.query(Order).filter(
             Order.id == order_id,
             Order.user_id == user_id

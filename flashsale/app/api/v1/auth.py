@@ -10,7 +10,7 @@ from app.core.security import (
     verify_password,
     JWTBearer
 )
-from app.services.user_service import get_user_by_username, create_user, add_favorite_product, get_favorite_products, get_user
+from app.services.user_service import get_user_by_username, create_user, add_favorite_product, remove_favorite_product, get_favorite_products, get_user
 from app.schemas.user import User, UserCreate, UserRegister, LoginRequest, LoginResponse
 
 router = APIRouter(prefix="/auth", tags=["Authentication"])
@@ -111,7 +111,7 @@ async def logout(
         revoke_token(token, user_id)
     
     return {"message": "登出成功"}
-
+#post表示提交数据，提交给服务器处理
 @router.post("/logout-all", summary="登出所有设备")
 async def logout_all(
     user_id: int = Depends(JWTBearer()),
@@ -129,7 +129,7 @@ async def logout_all(
     revoke_all_tokens(user_id)
 
     return {"message": "已登出所有设备"}
-
+#get表示获取数据，不提交数据
 @router.get("/me", response_model=User, summary="获取当前用户信息")
 async def get_current_user(
     user_id: int = Depends(JWTBearer()),
@@ -177,6 +177,32 @@ async def add_favorite(
             detail="用户不存在"
         )
     return user
+
+@router.delete("/favorite/{product_id}", summary="取消收藏")
+async def remove_favorite(
+    product_id: int,
+    user_id: int = Depends(JWTBearer()),
+    db: Session = Depends(get_db)
+):
+    """
+    取消收藏商品接口
+
+    请求头:
+    - Authorization: Bearer <token>
+
+    参数:
+    - product_id: 商品ID
+
+    返回:
+    - message: 操作成功消息
+    """
+    user = remove_favorite_product(db, user_id, product_id)
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="用户不存在"
+        )
+    return {"message": "取消收藏成功"}
 
 @router.get("/favorite", summary="获取喜欢的商品列表")
 async def get_favorites(

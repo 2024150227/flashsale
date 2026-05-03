@@ -305,6 +305,68 @@
             color: #e74c3c;
         }
 
+        /* Favorite Button */
+        .product-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 12px;
+        }
+
+        .btn-favorite {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: rgba(255, 255, 255, 0.7);
+            padding: 8px 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .btn-favorite:hover {
+            background: rgba(255, 255, 255, 0.2);
+            color: #fff;
+        }
+
+        .btn-favorite.active {
+            background: rgba(240, 147, 251, 0.2);
+            border-color: rgba(240, 147, 251, 0.5);
+            color: #f093fb;
+        }
+
+        .btn-favorite.active .heart-icon {
+            color: #f093fb;
+        }
+
+        .btn-primary {
+            flex: 1;
+        }
+
+        /* Toast notification */
+        .toast {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.8);
+            color: #fff;
+            padding: 12px 24px;
+            border-radius: 8px;
+            z-index: 1000;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .toast.success {
+            background: rgba(39, 174, 96, 0.9);
+        }
+
+        .toast.error {
+            background: rgba(231, 76, 60, 0.9);
+        }
+
         /* Button */
         .btn {
             width: 100%;
@@ -803,9 +865,29 @@
                 const response = await fetch(`${API_BASE}/products/`);
                 if (!response.ok) throw new Error('HTTP error');
 
-                const products = await response.json();
+                let products = await response.json();
 
-                // 只取前20个商品
+                const token = localStorage.getItem('access_token');
+                let favoriteIds = [];
+                if (token) {
+                    try {
+                        const favResponse = await fetch(`${API_BASE}/auth/favorite`, {
+                            headers: { 'Authorization': `Bearer ${token}` }
+                        });
+                        if (favResponse.ok) {
+                            const favData = await favResponse.json();
+                            favoriteIds = favData.favorites || [];
+                        }
+                    } catch (e) {
+                        console.log('Failed to load favorites');
+                    }
+                }
+
+                products = products.map(p => ({
+                    ...p,
+                    is_favorite: favoriteIds.includes(p.id)
+                }));
+
                 const displayProducts = products.slice(0, MAX_PRODUCTS);
 
                 if (displayProducts.length === 0) {
@@ -837,10 +919,17 @@
                                     <span>剩余库存:</span>
                                     <span class="stock-value">${product.stock}</span>
                                 </div>
-                                <button class="btn btn-primary" ${product.stock <= 0 ? 'disabled' : ''} 
-                                        onclick="quickOrder(${product.id})">
-                                    ${product.stock <= 0 ? '已抢光' : '立即抢购'}
-                                </button>
+                                <div class="product-actions">
+                                    <button class="btn-favorite ${product.is_favorite ? 'active' : ''}" 
+                                            onclick="toggleFavorite(${product.id}, this)">
+                                        <span class="heart-icon">${product.is_favorite ? '❤️' : '🤍'}</span>
+                                        <span>${product.is_favorite ? '已收藏' : '收藏'}</span>
+                                    </button>
+                                    <button class="btn btn-primary" ${product.stock <= 0 ? 'disabled' : ''} 
+                                            onclick="quickOrder(${product.id})">
+                                        ${product.stock <= 0 ? '已抢光' : '立即抢购'}
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     `;
@@ -1050,6 +1139,50 @@
                 updateCountdown();
                 setInterval(updateCountdown, 1000);
             });
+        }
+
+        async function toggleFavorite(productId, btnElement) {
+            const token = localStorage.getItem('access_token');
+            if (!token) {
+                showToast('请先登录后再收藏商品', 'error');
+                return;
+            }
+
+            const isFavorite = btnElement.classList.contains('active');
+
+            try {
+                if (isFavorite) {
+                    const response = await fetch(`${API_BASE}/auth/favorite/${productId}`, {
+                        method: 'DELETE',
+                        headers: {
+                            'Authorization': `Bearer ${token}`
+                        }
+                    });
+
+                    if (response.ok) {
+                        btnElement.classList.remove('active');
+                        btnElement.querySelector('.heart-icon').textContent = '🤍';
+                        btnElement.querySelector('span:last-child').textContent = '收藏';
+                        showToast('已取消收藏', 'success');
+                    }
+                } else {
+                    const response = await fetch(`${API_BASE}/auth/favorite/${productId}`, {
+                        method: 'POST',
+                        headers: {
+                            'Authorization': `Bearer ${token}`
+                        }
+                    });
+
+                    if (response.ok) {
+                        btnElement.classList.add('active');
+                        btnElement.querySelector('.heart-icon').textContent = '❤️';
+                        btnElement.querySelector('span:last-child').textContent = '已收藏';
+                        showToast('收藏成功 ❤️', 'success');
+                    }
+                }
+            } catch (error) {
+                showToast('操作失败，请重试', 'error');
+            }
         }
 
         function quickOrder(productId) {

@@ -41,6 +41,22 @@ class OrderService:
             return {"status": "queued"}
         except Exception as e:
             logger.error(f"Failed to send order message to Kafka: {e}")
+    def get_orders(self, user_id: int) -> List[OrderDetail]:
+        """获取用户订单列表
+        权重：1（低频率，但最重要）
+        参数：
+            user_id: 用户ID
+        返回：
+            List[OrderDetail]: 用户订单列表
+        异常处理：
+            其他: 记录失败日志
+        """
+        try:
+            db = SessionLocal()
+            orders = db.query(Order).filter(Order.user_id == user_id).all()
+            return orders
+        except Exception as e:
+            logger.error(f"Failed to get orders for user {user_id}: {e}")
             raise e
     
     def process_order(self, order_message: dict) -> bool:
