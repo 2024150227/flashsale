@@ -1,6 +1,6 @@
 services:
   mysql-master:
-    image: mysql:8.0
+    image: registry.aliyuncs.com/library/mysql:8.0
     container_name: flashsale-mysql-master
     environment:
       MYSQL_ROOT_PASSWORD: mysql123456
@@ -14,7 +14,7 @@ services:
     command: --server-id=1 --log-bin=mysql-bin --binlog-format=ROW --default-storage-engine=InnoDB
 
   mysql-slave:
-    image: mysql:8.0
+    image: registry.aliyuncs.com/library/mysql:8.0
     container_name: flashsale-mysql-slave
     environment:
       MYSQL_ROOT_PASSWORD: mysql123456
@@ -30,7 +30,7 @@ services:
       - mysql-master
 
   redis:
-    image: redis:7.0
+    image: registry.aliyuncs.com/library/redis:7.0
     container_name: flashsale-redis
     ports:
       - "6379:6379"
@@ -42,7 +42,7 @@ services:
       - flashsale-network
 
   kafka:
-    image: confluentinc/cp-kafka:7.6.0
+    image: registry.aliyuncs.com/library/confluentinc/cp-kafka:7.6.0
     container_name: flashsale-kafka
     environment:
       - KAFKA_NODE_ID=1
@@ -85,7 +85,7 @@ services:
       - flashsale-network
 
   ollama:
-    image: ollama/ollama:latest
+    image: registry.aliyuncs.com/library/llama/ollama:latest
     container_name: flashsale-ollama
     ports:
       - "11434:11434"
