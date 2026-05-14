@@ -4,39 +4,43 @@ venv/
 env/
 *.egg-info/
 
-# 日志文件
+# Python compiled files
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+
+# Log files
 *.log
+app/logs/
 logs/
 
-# 数据库文件
-*.db
-*.sql
-
-# Redis 数据
-redis_data/
-
-# Docker 数据卷
-volumes/
-
-# 配置文件（敏感信息）
+# Environment files
 .env
 .env.local
 .env.*.local
 
-# IDE 文件
+# Database
+*.db
+*.sql
+*.sqlite
+
+# Redis 数据
+redis_data/
+
+# Docker
+docker-compose.override.yml
+volumes/
+
+# IDE
 .vscode/
 .idea/
 *.swp
 *.swo
 *~
 
-# Python 编译文件
-__pycache__/
-*.pyc
-*.pyo
-.Python
-
-# 操作系统文件
+# OS
 .DS_Store
 Thumbs.db
 

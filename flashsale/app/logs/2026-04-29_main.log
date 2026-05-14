@@ -1,0 +1,81 @@
+2026-04-29 15:43:54,289 - flashsale.main - DEBUG - Static files path: E:\Desktop\高并发秒杀系统\flashsale\static
+2026-04-29 15:43:54,289 - flashsale.main - DEBUG - Path exists: True
+2026-04-29 15:43:54,290 - flashsale.main - INFO - Static files mounted successfully
+2026-04-29 15:44:34,212 - flashsale.main - DEBUG - Static files path: E:\Desktop\高并发秒杀系统\flashsale\static
+2026-04-29 15:44:34,212 - flashsale.main - DEBUG - Path exists: True
+2026-04-29 15:44:34,212 - flashsale.main - INFO - Static files mounted successfully
+2026-04-29 15:45:14,155 - flashsale.main - DEBUG - Static files path: E:\Desktop\高并发秒杀系统\flashsale\static
+2026-04-29 15:45:14,155 - flashsale.main - DEBUG - Path exists: True
+2026-04-29 15:45:14,156 - flashsale.main - INFO - Static files mounted successfully
+2026-04-29 15:45:54,119 - flashsale.main - DEBUG - Static files path: E:\Desktop\高并发秒杀系统\flashsale\static
+2026-04-29 15:45:54,119 - flashsale.main - DEBUG - Path exists: True
+2026-04-29 15:45:54,119 - flashsale.main - INFO - Static files mounted successfully
+2026-04-29 15:46:40,050 - flashsale.main - DEBUG - Static files path: E:\Desktop\高并发秒杀系统\flashsale\static
+2026-04-29 15:46:40,051 - flashsale.main - DEBUG - Path exists: True
+2026-04-29 15:46:40,051 - flashsale.main - INFO - Static files mounted successfully
+2026-04-29 15:49:34,424 - flashsale.main - DEBUG - Serving HTML from: E:\Desktop\高并发秒杀系统\flashsale\static\index.html
+2026-04-29 15:49:34,424 - flashsale.main - DEBUG - HTML exists: True
+2026-04-29 15:52:39,836 - flashsale.main - DEBUG - Serving HTML from: E:\Desktop\高并发秒杀系统\flashsale\static\index.html
+2026-04-29 15:52:39,836 - flashsale.main - DEBUG - HTML exists: True
+2026-04-29 15:53:00,572 - flashsale.main - DEBUG - Serving HTML from: E:\Desktop\高并发秒杀系统\flashsale\static\index.html
+2026-04-29 15:53:00,572 - flashsale.main - DEBUG - HTML exists: True
+2026-04-29 15:53:04,696 - flashsale.main - DEBUG - Serving HTML from: E:\Desktop\高并发秒杀系统\flashsale\static\index.html
+2026-04-29 15:53:04,696 - flashsale.main - DEBUG - HTML exists: True
+2026-04-29 15:53:53,614 - flashsale.main - DEBUG - Serving HTML from: E:\Desktop\高并发秒杀系统\flashsale\static\index.html
+2026-04-29 15:53:53,614 - flashsale.main - DEBUG - HTML exists: True
+2026-04-29 16:03:31,691 - flashsale.main - DEBUG - Static files path: E:\Desktop\高并发秒杀系统\flashsale\static
+2026-04-29 16:03:31,691 - flashsale.main - DEBUG - Path exists: True
+2026-04-29 16:03:31,691 - flashsale.main - INFO - Static files mounted successfully
+2026-04-29 16:11:21,910 - flashsale.main - DEBUG - Serving HTML from: E:\Desktop\高并发秒杀系统\flashsale\static\index.html
+2026-04-29 16:11:21,910 - flashsale.main - DEBUG - HTML exists: True
+2026-04-29 16:11:29,463 - flashsale.main - DEBUG - Serving HTML from: E:\Desktop\高并发秒杀系统\flashsale\static\index.html
+2026-04-29 16:11:29,464 - flashsale.main - DEBUG - HTML exists: True
+2026-04-29 16:11:46,989 - flashsale.main - DEBUG - Serving HTML from: E:\Desktop\高并发秒杀系统\flashsale\static\index.html
+2026-04-29 16:11:46,989 - flashsale.main - DEBUG - HTML exists: True
+2026-04-29 16:12:07,854 - flashsale.main - DEBUG - Serving HTML from: E:\Desktop\高并发秒杀系统\flashsale\static\index.html
+2026-04-29 16:12:07,854 - flashsale.main - DEBUG - HTML exists: True
+2026-04-29 16:13:39,106 - flashsale.main - DEBUG - Serving HTML from: E:\Desktop\高并发秒杀系统\flashsale\static\index.html
+2026-04-29 16:13:39,106 - flashsale.main - DEBUG - HTML exists: True
+2026-04-29 16:15:54,644 - flashsale.main - DEBUG - Serving HTML from: E:\Desktop\高并发秒杀系统\flashsale\static\index.html
+2026-04-29 16:15:54,645 - flashsale.main - DEBUG - HTML exists: True
+2026-04-29 16:20:04,981 - flashsale.main - DEBUG - Static files path: E:\Desktop\高并发秒杀系统\flashsale\static
+2026-04-29 16:20:04,981 - flashsale.main - DEBUG - Path exists: True
+2026-04-29 16:20:04,982 - flashsale.main - INFO - Static files mounted successfully
+2026-04-29 16:23:24,952 - flashsale.main - DEBUG - Static files path: E:\Desktop\高并发秒杀系统\flashsale\static
+2026-04-29 16:23:24,952 - flashsale.main - DEBUG - Path exists: True
+2026-04-29 16:23:24,953 - flashsale.main - INFO - Static files mounted successfully
+2026-04-29 16:26:07,086 - flashsale.main - DEBUG - Static files path: E:\Desktop\高并发秒杀系统\flashsale\static
+2026-04-29 16:26:07,086 - flashsale.main - DEBUG - Path exists: True
+2026-04-29 16:26:07,086 - flashsale.main - INFO - Static files mounted successfully
+2026-04-29 16:28:27,541 - flashsale.main - DEBUG - Static files path: E:\Desktop\高并发秒杀系统\flashsale\static
+2026-04-29 16:28:27,541 - flashsale.main - DEBUG - Path exists: True
+2026-04-29 16:28:27,541 - flashsale.main - INFO - Static files mounted successfully
+2026-04-29 17:13:49,181 - flashsale.main - DEBUG - Static files path: E:\Desktop\高并发秒杀系统\flashsale\static
+2026-04-29 17:13:49,181 - flashsale.main - DEBUG - Path exists: True
+2026-04-29 17:13:49,181 - flashsale.main - INFO - Static files mounted successfully
+2026-04-29 17:16:11,337 - flashsale.main - DEBUG - Static files path: E:\Desktop\高并发秒杀系统\flashsale\static
+2026-04-29 17:16:11,337 - flashsale.main - DEBUG - Path exists: True
+2026-04-29 17:16:11,337 - flashsale.main - INFO - Static files mounted successfully
+2026-04-29 17:17:31,744 - flashsale.main - DEBUG - Static files path: E:\Desktop\高并发秒杀系统\flashsale\static
+2026-04-29 17:17:31,745 - flashsale.main - DEBUG - Path exists: True
+2026-04-29 17:17:31,745 - flashsale.main - INFO - Static files mounted successfully
+2026-04-29 17:19:29,358 - flashsale.main - DEBUG - Static files path: E:\Desktop\高并发秒杀系统\flashsale\static
+2026-04-29 17:19:29,358 - flashsale.main - DEBUG - Path exists: True
+2026-04-29 17:19:29,358 - flashsale.main - INFO - Static files mounted successfully
+2026-04-29 17:21:08,679 - flashsale.main - DEBUG - Static files path: E:\Desktop\高并发秒杀系统\flashsale\static
+2026-04-29 17:21:08,679 - flashsale.main - DEBUG - Path exists: True
+2026-04-29 17:21:08,679 - flashsale.main - INFO - Static files mounted successfully
+2026-04-29 18:10:32,653 - flashsale.main - DEBUG - Static files path: E:\Desktop\高并发秒杀系统\flashsale\static
+2026-04-29 18:10:32,653 - flashsale.main - DEBUG - Path exists: True
+2026-04-29 18:10:32,653 - flashsale.main - INFO - Static files mounted successfully
+2026-04-29 18:10:33,882 - flashsale.main - DEBUG - Serving login HTML from: E:\Desktop\高并发秒杀系统\flashsale\static\login.html
+2026-04-29 18:10:33,882 - flashsale.main - DEBUG - HTML exists: True
+2026-04-29 18:12:20,354 - flashsale.main - DEBUG - Serving login HTML from: E:\Desktop\高并发秒杀系统\flashsale\static\login.html
+2026-04-29 18:12:20,355 - flashsale.main - DEBUG - HTML exists: True
+2026-04-29 18:12:31,881 - flashsale.main - DEBUG - Serving flashsale HTML from: E:\Desktop\高并发秒杀系统\flashsale\static\index.html
+2026-04-29 18:12:31,881 - flashsale.main - DEBUG - HTML exists: True
+2026-04-29 18:26:13,838 - flashsale.main - DEBUG - Static files path: E:\Desktop\高并发秒杀系统\flashsale\static
+2026-04-29 18:26:13,838 - flashsale.main - DEBUG - Path exists: True
+2026-04-29 18:26:13,838 - flashsale.main - INFO - Static files mounted successfully
+2026-04-30 12:27:13,814 - flashsale.main - DEBUG - Serving login HTML from: E:\Desktop\高并发秒杀系统\flashsale\static\login.html
+2026-04-30 12:27:13,829 - flashsale.main - DEBUG - HTML exists: True
