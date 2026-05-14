@@ -1,0 +1,67 @@
+# 虚拟环境
+.venv/
+venv/
+env/
+*.egg-info/
+
+# 日志文件
+*.log
+logs/
+
+# 数据库文件
+*.db
+*.sql
+
+# Redis 数据
+redis_data/
+
+# Docker 数据卷
+volumes/
+
+# 配置文件（敏感信息）
+.env
+.env.local
+.env.*.local
+
+# IDE 文件
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Python 编译文件
+__pycache__/
+*.pyc
+*.pyo
+.Python
+
+# 操作系统文件
+.DS_Store
+Thumbs.db
+
+# 测试文件
+.pytest_cache/
+.tox/
+.coverage
+htmlcov/
+
+# Jupyter 笔记本
+.ipynb_checkpoints/
+
+# 临时文件
+tmp/
+temp/
+
+# 静态文件缓存
+static/cache/
+
+# 头像上传目录（如果不需要提交）
+# static/avatars/
+
+# RAG 模型文件
+rag/models/
+rag/data/
+
+# Docker 构建缓存
+.dockerignore

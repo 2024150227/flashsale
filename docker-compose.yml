@@ -1,0 +1,129 @@
+services:
+  mysql-master:
+    image: mysql:8.0
+    container_name: flashsale-mysql-master
+    environment:
+      MYSQL_ROOT_PASSWORD: mysql123456
+      MYSQL_DATABASE: flashsale
+    ports:
+      - "3307:3306"
+    volumes:
+      - mysql_master_data:/var/lib/mysql
+    networks:
+      - flashsale-network
+    command: --server-id=1 --log-bin=mysql-bin --binlog-format=ROW --default-storage-engine=InnoDB
+
+  mysql-slave:
+    image: mysql:8.0
+    container_name: flashsale-mysql-slave
+    environment:
+      MYSQL_ROOT_PASSWORD: mysql123456
+      MYSQL_DATABASE: flashsale
+    ports:
+      - "3308:3306"
+    volumes:
+      - mysql_slave_data:/var/lib/mysql
+    networks:
+      - flashsale-network
+    command: --server-id=2 --log-bin=mysql-bin --binlog-format=ROW --default-storage-engine=InnoDB
+    depends_on:
+      - mysql-master
+
+  redis:
+    image: redis:7.0
+    container_name: flashsale-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+      - ./redis.conf:/usr/local/etc/redis/redis.conf
+    command: redis-server /usr/local/etc/redis/redis.conf
+    networks:
+      - flashsale-network
+
+  kafka:
+    image: confluentinc/cp-kafka:7.6.0
+    container_name: flashsale-kafka
+    environment:
+      - KAFKA_NODE_ID=1
+      - KAFKA_PROCESS_ROLES=controller,broker
+      - KAFKA_LISTENERS=PLAINTEXT://0.0.0.0:9092,EXTERNAL://0.0.0.0:9094,CONTROLLER://:9093
+      - KAFKA_ADVERTISED_LISTENERS=PLAINTEXT://kafka:9092,EXTERNAL://localhost:9094
+      - KAFKA_CONTROLLER_QUORUM_VOTERS=1@localhost:9093
+      - KAFKA_INTER_BROKER_LISTENER_NAME=PLAINTEXT
+      - KAFKA_CONTROLLER_LISTENER_NAMES=CONTROLLER
+      - KAFKA_LISTENER_SECURITY_PROTOCOL_MAP=PLAINTEXT:PLAINTEXT,EXTERNAL:PLAINTEXT,CONTROLLER:PLAINTEXT
+      - KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR=1
+      - KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR=1
+      - KAFKA_TRANSACTION_STATE_LOG_MIN_ISR=1
+      - KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS=0
+      - CLUSTER_ID=MkU3OEVBNTcwNTJENDM2Qk
+    ports:
+      - "9092:9092"
+      - "9094:9094"
+    volumes:
+      - kafka_data:/tmp/kafka-logs
+    networks:
+      - flashsale-network
+
+  app:
+    build: .
+    container_name: flashsale-app
+    ports:
+      - "8000:8000"
+    depends_on:
+      - mysql-master
+      - mysql-slave
+      - redis
+      - kafka
+    environment:
+      - DATABASE_URL_MASTER=mysql+mysqlconnector://root:mysql123456@mysql-master:3306/flashsale
+      - DATABASE_URL_SLAVE=mysql+mysqlconnector://root:mysql123456@mysql-slave:3306/flashsale
+      - REDIS_URL=redis://redis:6379/0
+      - KAFKA_BOOTSTRAP_SERVERS=kafka:9092
+    networks:
+      - flashsale-network
+
+  ollama:
+    image: ollama/ollama:latest
+    container_name: flashsale-ollama
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+    networks:
+      - flashsale-network
+    deploy:
+      resources:
+        limits:
+          memory: 8G
+
+  rag-service:
+    build:
+      context: .
+      dockerfile: rag/Dockerfile.rag
+    container_name: flashsale-rag-service
+    ports:
+      - "8001:8001"
+    environment:
+      - OLLAMA_URL=http://ollama:11434
+    depends_on:
+      - ollama
+    networks:
+      - flashsale-network
+
+volumes:
+  mysql_master_data:
+    driver: local
+  mysql_slave_data:
+    driver: local
+  kafka_data:
+    driver: local
+  redis_data:
+    driver: local
+  ollama_data:
+    driver: local
+
+networks:
+  flashsale-network:
+    driver: bridge

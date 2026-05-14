@@ -1,0 +1,36 @@
+version: "3.8"
+
+# 快速启动方案：使用Ollama本地部署，无需构建镜像
+services:
+  ollama:
+    image: ollama/ollama:latest
+    container_name: flashsale-ollama
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+    networks:
+      - flashsale-network
+
+  rag-service:
+    build:
+      context: .
+      dockerfile: Dockerfile.rag
+    container_name: flashsale-rag-service
+    ports:
+      - "8001:8001"
+    environment:
+      - OLLAMA_URL=http://ollama:11434
+      - USE_OLLAMA=true
+    depends_on:
+      - ollama
+    networks:
+      - flashsale-network
+
+volumes:
+  ollama_data:
+    driver: local
+
+networks:
+  flashsale-network:
+    driver: bridge
