@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Float, DateTime, UniqueConstraint
+from sqlalchemy import Column, Integer, String, Float, DateTime
 from sqlalchemy.sql import func
 from app.db.session import Base
 
@@ -12,7 +12,3 @@ class Order(Base):
     price = Column(Float, nullable=False)
     status = Column(String(50), default="pending")
     created_at = Column(DateTime(timezone=True), server_default=func.now())
-
-    __table_args__ = (
-        UniqueConstraint('user_id', 'product_id', 'seckill_session_id', name='uq_user_product_session'),
-    )

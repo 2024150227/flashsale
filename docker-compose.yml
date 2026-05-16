@@ -1,6 +1,6 @@
 services:
   mysql-master:
-    image: registry.aliyuncs.com/library/mysql:8.0
+    image: mysql:8.0
     container_name: flashsale-mysql-master
     environment:
       MYSQL_ROOT_PASSWORD: mysql123456
@@ -12,9 +12,14 @@ services:
     networks:
       - flashsale-network
     command: --server-id=1 --log-bin=mysql-bin --binlog-format=ROW --default-storage-engine=InnoDB
+    healthcheck:
+      test: [ "CMD", "mysqladmin", "ping", "-h", "localhost" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
 
   mysql-slave:
-    image: registry.aliyuncs.com/library/mysql:8.0
+    image: mysql:8.0
     container_name: flashsale-mysql-slave
     environment:
       MYSQL_ROOT_PASSWORD: mysql123456
@@ -27,10 +32,16 @@ services:
       - flashsale-network
     command: --server-id=2 --log-bin=mysql-bin --binlog-format=ROW --default-storage-engine=InnoDB
     depends_on:
-      - mysql-master
+      mysql-master:
+        condition: service_healthy
+    healthcheck:
+      test: [ "CMD", "mysqladmin", "ping", "-h", "localhost" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
 
   redis:
-    image: registry.aliyuncs.com/library/redis:7.0
+    image: redis:7.0
     container_name: flashsale-redis
     ports:
       - "6379:6379"
@@ -40,16 +51,21 @@ services:
     command: redis-server /usr/local/etc/redis/redis.conf
     networks:
       - flashsale-network
+    healthcheck:
+      test: [ "CMD", "redis-cli", "ping" ]
+      interval: 10s
+      timeout: 5s
+      retries: 3
 
   kafka:
-    image: registry.aliyuncs.com/library/confluentinc/cp-kafka:7.6.0
+    image: confluentinc/cp-kafka:7.6.0
     container_name: flashsale-kafka
     environment:
       - KAFKA_NODE_ID=1
       - KAFKA_PROCESS_ROLES=controller,broker
       - KAFKA_LISTENERS=PLAINTEXT://0.0.0.0:9092,EXTERNAL://0.0.0.0:9094,CONTROLLER://:9093
       - KAFKA_ADVERTISED_LISTENERS=PLAINTEXT://kafka:9092,EXTERNAL://localhost:9094
-      - KAFKA_CONTROLLER_QUORUM_VOTERS=1@localhost:9093
+      - KAFKA_CONTROLLER_QUORUM_VOTERS=1@kafka:9093
       - KAFKA_INTER_BROKER_LISTENER_NAME=PLAINTEXT
       - KAFKA_CONTROLLER_LISTENER_NAMES=CONTROLLER
       - KAFKA_LISTENER_SECURITY_PROTOCOL_MAP=PLAINTEXT:PLAINTEXT,EXTERNAL:PLAINTEXT,CONTROLLER:PLAINTEXT
@@ -58,6 +74,7 @@ services:
       - KAFKA_TRANSACTION_STATE_LOG_MIN_ISR=1
       - KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS=0
       - CLUSTER_ID=MkU3OEVBNTcwNTJENDM2Qk
+      - KAFKA_AUTO_CREATE_TOPICS_ENABLE=true
     ports:
       - "9092:9092"
       - "9094:9094"
@@ -65,27 +82,201 @@ services:
       - kafka_data:/tmp/kafka-logs
     networks:
       - flashsale-network
+    healthcheck:
+      test: [ "CMD", "kafka-topics", "--list", "--bootstrap-server", "localhost:9092" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
 
-  app:
-    build: .
-    container_name: flashsale-app
+  kong-db:
+    image: postgres:13
+    container_name: flashsale-kong-db
+    environment:
+      POSTGRES_USER: kong
+      POSTGRES_PASSWORD: kong
+      POSTGRES_DB: kong
+    volumes:
+      - kong_db_data:/var/lib/postgresql/data
+    networks:
+      - flashsale-network
+    healthcheck:
+      test: [ "CMD", "pg_isready", "-U", "kong" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  kong:
+    image: kong:3.6
+    container_name: flashsale-kong
+    environment:
+      KONG_DATABASE: postgres
+      KONG_PG_HOST: kong-db
+      KONG_PG_USER: kong
+      KONG_PG_PASSWORD: kong
+      KONG_PG_DATABASE: kong
+      KONG_ADMIN_LISTEN: 0.0.0.0:8001
+      KONG_PROXY_LISTEN: 0.0.0.0:8000
+      KONG_LOG_LEVEL: info
     ports:
       - "8000:8000"
+      - "8001:8001"
+    volumes:
+      - ./scripts/configure_kong.sh:/scripts/configure_kong.sh:ro
     depends_on:
-      - mysql-master
-      - mysql-slave
-      - redis
-      - kafka
+      kong-db:
+        condition: service_healthy
+    networks:
+      - flashsale-network
+    healthcheck:
+      test: [ "CMD", "kong", "health" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  nginx:
+    image: nginx:alpine
+    container_name: flashsale-nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/ssl:/etc/nginx/ssl:ro
+      - ./static:/usr/share/nginx/html/static:ro
+    depends_on:
+      - kong
+    networks:
+      - flashsale-network
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 512M
+    healthcheck:
+      test: [ "CMD", "curl", "-k", "-f", "https://localhost/health" ]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  app1:
+    build: .
+    container_name: flashsale-app1
+    depends_on:
+      mysql-master:
+        condition: service_healthy
+      mysql-slave:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
     environment:
       - DATABASE_URL_MASTER=mysql+mysqlconnector://root:mysql123456@mysql-master:3306/flashsale
       - DATABASE_URL_SLAVE=mysql+mysqlconnector://root:mysql123456@mysql-slave:3306/flashsale
       - REDIS_URL=redis://redis:6379/0
       - KAFKA_BOOTSTRAP_SERVERS=kafka:9092
+      - SERVICE_NAME=app1
     networks:
       - flashsale-network
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 1G
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:8000/health" ]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  app2:
+    build: .
+    container_name: flashsale-app2
+    depends_on:
+      mysql-master:
+        condition: service_healthy
+      mysql-slave:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+    environment:
+      - DATABASE_URL_MASTER=mysql+mysqlconnector://root:mysql123456@mysql-master:3306/flashsale
+      - DATABASE_URL_SLAVE=mysql+mysqlconnector://root:mysql123456@mysql-slave:3306/flashsale
+      - REDIS_URL=redis://redis:6379/0
+      - KAFKA_BOOTSTRAP_SERVERS=kafka:9092
+      - SERVICE_NAME=app2
+    networks:
+      - flashsale-network
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 1G
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:8000/health" ]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  app3:
+    build: .
+    container_name: flashsale-app3
+    depends_on:
+      mysql-master:
+        condition: service_healthy
+      mysql-slave:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+    environment:
+      - DATABASE_URL_MASTER=mysql+mysqlconnector://root:mysql123456@mysql-master:3306/flashsale
+      - DATABASE_URL_SLAVE=mysql+mysqlconnector://root:mysql123456@mysql-slave:3306/flashsale
+      - REDIS_URL=redis://redis:6379/0
+      - KAFKA_BOOTSTRAP_SERVERS=kafka:9092
+      - SERVICE_NAME=app3
+    networks:
+      - flashsale-network
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 1G
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:8000/health" ]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  kafka-consumer:
+    build:
+      context: .
+      dockerfile: Dockerfile.consumer
+    container_name: flashsale-kafka-consumer
+    depends_on:
+      mysql-master:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+    environment:
+      - DATABASE_URL_MASTER=mysql+mysqlconnector://root:mysql123456@mysql-master:3306/flashsale
+      - REDIS_URL=redis://redis:6379/0
+      - KAFKA_BOOTSTRAP_SERVERS=kafka:9092
+    networks:
+      - flashsale-network
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 512M
 
   ollama:
-    image: registry.aliyuncs.com/library/llama/ollama:latest
+    image: ollama/ollama:latest
     container_name: flashsale-ollama
     ports:
       - "11434:11434"
@@ -117,9 +308,11 @@ volumes:
     driver: local
   mysql_slave_data:
     driver: local
+  redis_data:
+    driver: local
   kafka_data:
     driver: local
-  redis_data:
+  kong_db_data:
     driver: local
   ollama_data:
     driver: local

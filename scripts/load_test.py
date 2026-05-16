@@ -83,8 +83,8 @@ class FlashSaleUser(HttpUser):
             headers["Authorization"] = f"Bearer {self.token}"
         return headers
 
-    # 秒杀目标商品列表（仅测试这3个）
-    TARGET_PRODUCTS = [1, 2, 3]
+    # 秒杀目标商品列表（测试所有105个商品）
+    TARGET_PRODUCTS = list(range(1, 106))
     
     @task(1)
     def create_order(self):

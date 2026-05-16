@@ -8,6 +8,7 @@ from redis import Redis
 from app.core.config import settings
 
 SECRET_KEY = "flashsale_jwt_secret_key_2026"
+JWT_ISSUER = "flashsale-jwt-key"  # 必须与Kong的JWT密钥key一致
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 30  # 延长到30分钟
 REFRESH_TOKEN_EXPIRE_DAYS = 7
@@ -39,7 +40,11 @@ def create_access_token(data: Dict[str, any], expires_delta: Optional[timedelta]
         expire = datetime.now(timezone.utc) + expires_delta
     else:
         expire = datetime.now(timezone.utc) + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
-    to_encode.update({"exp": expire, "type": "access"})
+    to_encode.update({
+        "exp": expire, 
+        "type": "access",
+        "iss": JWT_ISSUER  # Kong JWT插件需要iss声明匹配
+    })
     if "sub" in to_encode and not isinstance(to_encode["sub"], str):
         to_encode["sub"] = str(to_encode["sub"])
     encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
@@ -51,7 +56,11 @@ def create_refresh_token(data: Dict[str, any], expires_delta: Optional[timedelta
         expire = datetime.now(timezone.utc) + expires_delta
     else:
         expire = datetime.now(timezone.utc) + timedelta(days=REFRESH_TOKEN_EXPIRE_DAYS)
-    to_encode.update({"exp": expire, "type": "refresh"})
+    to_encode.update({
+        "exp": expire, 
+        "type": "refresh",
+        "iss": JWT_ISSUER  # Kong JWT插件需要iss声明匹配
+    })
     if "sub" in to_encode and not isinstance(to_encode["sub"], str):
         to_encode["sub"] = str(to_encode["sub"])
     encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
@@ -60,6 +69,8 @@ def create_refresh_token(data: Dict[str, any], expires_delta: Optional[timedelta
 def verify_access_token(token: str) -> Optional[Dict[str, any]]:
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        if payload.get("iss") != JWT_ISSUER:
+            return None 
         if payload.get("type") != "access":
             return None
         user_id_str = payload.get("sub")
@@ -168,6 +179,18 @@ class JWTBearer:
         self.auto_error = auto_error
 
     async def __call__(self, request: Request):
+        # 首先检查是否由Kong验证通过（有X-Consumer-Username头）
+        kong_consumer = request.headers.get("X-Consumer-Username")
+        kong_user_id = request.headers.get("X-Consumer-Custom-Id")
+        
+        if kong_consumer and kong_user_id:
+            # Kong已经验证通过
+            try:
+                return int(kong_user_id)
+            except (ValueError, TypeError):
+                pass
+        
+        # 如果没有Kong验证，则自己验证
         auth_header = request.headers.get("Authorization")
         if auth_header is None:
             if self.auto_error:

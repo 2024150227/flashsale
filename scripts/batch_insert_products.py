@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
-"""Batch insert 200 test products to the database"""
-#脚本批量插入200个测试商品到数据库
+"""Batch insert 100 test products to the database"""
+#脚本批量插入100个测试商品到数据库
 import datetime
 import sys
 import os
@@ -11,10 +11,10 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 from app.db.session import SessionLocal
 from app.models.product import Product
 
-# 生成200个测试商品并插入数据库
+# 生成100个测试商品并插入数据库
 # 连接数据库引擎engine
 def generate_products():
-    print("Starting to insert 200 products...")
+    print("Starting to insert 100 products...")
 
     db = SessionLocal()
 
@@ -44,11 +44,11 @@ def generate_products():
 
         products_to_add = []
 
-        for i in range(200):
+        for i in range(100):
             template = product_templates[i % len(product_templates)]
             name = f"{template[0]} - Flash Sale #{i+1:03d}"
             price = round(template[1] * random.uniform(0.7, 0.95), 2)
-            stock = random.randint(10, 500)
+            stock = random.randint(100, 500)
             description = f"Limited time flash sale item, stock is limited! Product #{i+1}."
             #设置created_at和updated_at时间戳字段
             created_at = datetime.datetime.now()

@@ -1,10 +1,14 @@
 from app.utils.redis_client import redis_client
 from typing import List
+from datetime import datetime
 
 class BitmapService:
     """
     Redis Bitmap 服务
     用于高效存储和查询大量布尔状态
+    
+    当前主要用途：每日签到功能
+    使用 user_id 作为 bit 位偏移量，日期作为 key 后缀
     """
 
     def __init__(self, key_prefix: str = "flashsale:bitmap"):
@@ -67,7 +71,6 @@ class BitmapService:
         """
         key = self.get_key(name)
         result = redis_client.getbit(key, start)
-        # Redis没有直接获取范围的命令，需要逐个获取
         return [self.get_bit(name, i) for i in range(start, end + 1)]
 
     def bit_operation(self, dest_name: str, operation: str, *src_names: str):
@@ -102,50 +105,97 @@ class BitmapService:
         redis_client.delete(key)
 
 
-# 秒杀场景常用的Bitmap实例
-
-# 用户参与秒杀记录: flashsale:bitmap:seckill:{session_id}:product:{product_id}
-# 记录哪些用户参与了某场秒杀的商品，用于去重判断
-
-def mark_user_seckill(product_id: int, user_id: int, session_id: int):
-    """标记用户参与秒杀（支持场次）"""
-    key = f"flashsale:bitmap:seckill:{session_id}:product:{product_id}"
-    redis_client.setbit(key, user_id, 1)
-
-def has_user_seckill(product_id: int, user_id: int, session_id: int) -> bool:
-    """检查用户是否参与过该场秒杀"""
-    key = f"flashsale:bitmap:seckill:{session_id}:product:{product_id}"
-    return bool(redis_client.getbit(key, user_id))
-
-def get_seckill_participants(product_id: int, session_id: int) -> int:
-    """获取某场秒杀参与用户数量"""
-    key = f"flashsale:bitmap:seckill:{session_id}:product:{product_id}"
-    return redis_client.bitcount(key)
-
-
-# 每日签到: bitmap:checkin:{date}
-# 记录用户每日签到情况
+# ==================== 每日签到功能 ====================
+# 数据结构: flashsale:bitmap:checkin:{date}
+# 使用 user_id 作为 bit 位偏移量来记录用户签到状态
 
 def mark_checkin(user_id: int, date: str = None):
-    """标记用户签到"""
+    """
+    标记用户签到
+    
+    Args:
+        user_id: 用户ID（作为bit位偏移量）
+        date: 日期，格式 YYYYMMDD，默认为今天
+    """
     if not date:
-        from datetime import datetime
         date = datetime.now().strftime("%Y%m%d")
     key = f"flashsale:bitmap:checkin:{date}"
     redis_client.setbit(key, user_id, 1)
 
 def has_checkin(user_id: int, date: str = None) -> bool:
-    """检查用户是否签到"""
+    """
+    检查用户是否签到
+    
+    Args:
+        user_id: 用户ID
+        date: 日期，格式 YYYYMMDD，默认为今天
+    
+    Returns:
+        bool: 是否已签到
+    """
     if not date:
-        from datetime import datetime
         date = datetime.now().strftime("%Y%m%d")
     key = f"flashsale:bitmap:checkin:{date}"
     return bool(redis_client.getbit(key, user_id))
 
 def get_checkin_count(date: str = None) -> int:
-    """获取签到人数"""
+    """
+    获取指定日期的签到人数
+    
+    Args:
+        date: 日期，格式 YYYYMMDD，默认为今天
+    
+    Returns:
+        int: 签到人数
+    """
     if not date:
-        from datetime import datetime
         date = datetime.now().strftime("%Y%m%d")
     key = f"flashsale:bitmap:checkin:{date}"
     return redis_client.bitcount(key)
+
+def get_user_checkin_days(user_id: int, start_date: str, end_date: str) -> int:
+    """
+    统计用户在指定日期范围内的签到天数
+    
+    Args:
+        user_id: 用户ID
+        start_date: 开始日期，格式 YYYYMMDD
+        end_date: 结束日期，格式 YYYYMMDD
+    
+    Returns:
+        int: 签到天数
+    """
+    count = 0
+    current_date = datetime.strptime(start_date, "%Y%m%d")
+    end = datetime.strptime(end_date, "%Y%m%d")
+    
+    while current_date <= end:
+        date_str = current_date.strftime("%Y%m%d")
+        if has_checkin(user_id, date_str):
+            count += 1
+        current_date += datetime.timedelta(days=1)
+    
+    return count
+
+def get_continuous_checkin_days(user_id: int) -> int:
+    """
+    获取用户连续签到天数
+    
+    Args:
+        user_id: 用户ID
+    
+    Returns:
+        int: 连续签到天数
+    """
+    count = 0
+    today = datetime.now()
+    
+    for i in range(365):
+        date = today - datetime.timedelta(days=i)
+        date_str = date.strftime("%Y%m%d")
+        if has_checkin(user_id, date_str):
+            count += 1
+        else:
+            break
+    
+    return count
